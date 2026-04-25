@@ -10,7 +10,7 @@ const allowedOrigin = process.env.CLIENT_URL || '';
 
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000', allowedOrigin],
+    origin: ['http://localhost:5173', 'https://outreach.ainoviro.com', allowedOrigin],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
