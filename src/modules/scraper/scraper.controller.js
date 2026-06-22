@@ -139,4 +139,91 @@ const getScraperLogs = async (req, res) => {
     }
 };
 
-module.exports = { getCategories, runScraper, getScraperLogs };
+
+const directoryCategoryMap = require('./directoryCategoryMap');
+const { scrapeDirectoryCategory } = require('./directoryScraper.service');
+
+// Get directory-based categories (Cyprus Atlas)
+const getDirectoryCategories = async (req, res) => {
+    try {
+        const categories = Object.keys(directoryCategoryMap).map(key => ({
+            key,
+            label: directoryCategoryMap[key].label
+        }));
+        res.json({ message: 'Directory categories fetched', data: categories });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+// Run directory scraper (Cyprus Atlas) for a category
+const runDirectoryScraper = async (req, res) => {
+    try {
+        const { categoryKey, maxPagesPerSlug } = req.body;
+
+        if (!categoryKey || !directoryCategoryMap[categoryKey]) {
+            return res.status(400).json({ message: 'Invalid or missing categoryKey' });
+        }
+
+        res.json({ message: `Directory scraper started for category: ${directoryCategoryMap[categoryKey].label}. This may take several minutes.` });
+
+        const db = getDB();
+        const contactsCollection = db.collection('contacts');
+        const donotcontactCollection = db.collection('donotcontact');
+
+        const { slugs, label } = directoryCategoryMap[categoryKey];
+
+        const companies = await scrapeDirectoryCategory(slugs, maxPagesPerSlug || 3);
+
+        let added = 0;
+        let skipped = 0;
+        let noWebsite = 0;
+        let noEmail = 0;
+
+        for (const company of companies) {
+            const { name, phone, website } = company;
+
+            if (!website) { noWebsite++; continue; }
+
+            const email = await extractEmailFromWebsite(website);
+
+            if (!email) { noEmail++; continue; }
+
+            const blocked = await donotcontactCollection.findOne({ email });
+            if (blocked) { skipped++; continue; }
+
+            const existing = await contactsCollection.findOne({ email });
+            if (existing) { skipped++; continue; }
+
+            await contactsCollection.insertOne({
+                name,
+                email,
+                phone: phone || null,
+                businessName: name,
+                website: website || null,
+                category: label,
+                source: 'cyprus_atlas',
+                status: 'pending',
+                createdAt: new Date()
+            });
+
+            added++;
+        }
+
+        await db.collection('logs').insertOne({
+            type: 'directory_scraper',
+            category: categoryKey,
+            totalFound: companies.length,
+            added,
+            skipped,
+            noWebsite,
+            noEmail,
+            completedAt: new Date()
+        });
+
+    } catch (error) {
+        console.error('Directory scraper error:', error.message);
+    }
+};
+
+module.exports = { getCategories, runScraper, getScraperLogs, getDirectoryCategories, runDirectoryScraper };
