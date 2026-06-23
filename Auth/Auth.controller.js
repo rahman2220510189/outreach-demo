@@ -1,5 +1,5 @@
 const { getDB } = require('../src/config/db');
-const { hashPassword, comparePassword, signToken } = require('./auth.service');
+const { hashPassword, comparePassword, signToken } = require('./Auth.service');
 
 // POST /api/auth/login — public, no auth required
 const login = async (req, res) => {
