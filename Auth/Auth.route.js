@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { login, me, listUsers, addUser, removeUser } = require('./auth.controller');
+const { login, me, listUsers, addUser, removeUser } = require('./Auth.controller')
 const { requireAuth } = require('./Authmiddleware');
 
 // Public — this is the only auth route that doesn't require a token already
