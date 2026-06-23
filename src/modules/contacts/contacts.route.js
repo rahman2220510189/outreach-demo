@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { addContact, getContacts, unsubscribe, deleteContact, importCSV } = require('./contacts.controller');
+const { addContact, getContacts, unsubscribe, unsubscribeGet, deleteContact, importCSV } = require('./contacts.controller');
 
 // Add single contact
 router.post('/add', addContact);
@@ -9,8 +9,12 @@ router.post('/add', addContact);
 router.get('/', getContacts);
 
 router.post('/import-csv', importCSV);
-// Unsubscribe
+
+// Unsubscribe POST (API call)
 router.post('/unsubscribe', unsubscribe);
+
+// Unsubscribe GET (email link click)
+router.get('/unsubscribe', unsubscribeGet);
 
 // Delete contact
 router.delete('/:id', deleteContact);

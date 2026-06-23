@@ -25,7 +25,8 @@ const sendSingleEmail = async (req, res) => {
             toEmail: email,
             subject,
             body,
-            contactName: contact?.name || ''
+            contactName: contact?.name || '',
+            source: contact?.source || 'manual'
         });
 
         // Log it
@@ -106,7 +107,8 @@ const sendBulkEmail = async (req, res) => {
                     toEmail: contact.email,
                     subject,
                     body,
-                    contactName: contact.name || ''
+                    contactName: contact.name || '',
+                    source: contact?.source || 'manual'
                 });
 
                 await logsCollection.insertOne({

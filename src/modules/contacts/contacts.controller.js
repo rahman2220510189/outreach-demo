@@ -160,4 +160,37 @@ const importCSV = [
     }
   }
 ];
-module.exports = { addContact, getContacts, unsubscribe, deleteContact, importCSV };
+
+const unsubscribeGet = async (req, res) => {
+    try {
+        const db = getDB();
+        const { email } = req.query;
+
+        if (!email) {
+            return res.status(400).send('Invalid unsubscribe link.');
+        }
+
+        const existing = await db.collection('donotcontact').findOne({ email });
+        if (!existing) {
+            await db.collection('donotcontact').insertOne({
+                email,
+                createdAt: new Date()
+            });
+            await db.collection('contacts').updateOne(
+                { email },
+                { $set: { status: 'unsubscribed' } }
+            );
+        }
+
+        res.redirect(
+            `${process.env.CLIENT_URL}/unsubscribe?success=true&email=${encodeURIComponent(email)}`
+        );
+
+    } catch (error) {
+        res.status(500).send('Something went wrong. Please try again.');
+    }
+};
+
+module.exports = { addContact, getContacts, unsubscribe, unsubscribeGet, deleteContact, importCSV };
+
+

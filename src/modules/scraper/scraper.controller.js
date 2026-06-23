@@ -132,7 +132,10 @@ const runScraper = async (req, res) => {
 const getScraperLogs = async (req, res) => {
     try {
         const db = getDB();
-        const logs = await db.collection('logs').find({ type: 'scraper' }).sort({ completedAt: -1 }).toArray();
+        const logs = await db.collection('logs')
+            .find({ type: { $in: ['scraper', 'directory_scraper'] } })
+            .sort({ completedAt: -1 })
+            .toArray();
         res.json({ message: 'Scraper logs fetched', data: logs });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error: error.message });
@@ -226,4 +229,55 @@ const runDirectoryScraper = async (req, res) => {
     }
 };
 
-module.exports = { getCategories, runScraper, getScraperLogs, getDirectoryCategories, runDirectoryScraper };
+// Export contacts as CSV by category and source
+const exportCSV = async (req, res) => {
+    try {
+        const db = getDB();
+        const { category, type } = req.query;
+
+        if (!category || !type) {
+            return res.status(400).json({ message: 'category and type are required' });
+        }
+
+        const source = type === 'scraper' ? 'osm_scraper' : 'cyprus_atlas';
+
+        const categoryLabel = type === 'scraper'
+            ? categoryMap[category]?.label
+            : directoryCategoryMap[category]?.label;
+
+        const contacts = await db.collection('contacts').find({
+            source: source,
+            $or: [
+                { category: category },
+                { category: categoryLabel }
+            ]
+        }).toArray();
+
+        if (contacts.length === 0) {
+            return res.status(404).json({ message: 'No contacts found for this category' });
+        }
+
+        // CSV শুধু এই ৪টা column — CSVUpload format এর সাথে match
+        const headers = ['name', 'email', 'phone', 'businessName'];
+        const csvRows = [
+            headers.join(','),
+            ...contacts
+                .filter(c => c.email) // email নেই এমন skip
+                .map(c => headers.map(h => {
+                    const val = c[h] ?? '';
+                    return `"${String(val).replace(/"/g, '""')}"`;
+                }).join(','))
+        ];
+
+        const filename = `${source}_${category}_${Date.now()}.csv`;
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(csvRows.join('\n'));
+
+    } catch (error) {
+        res.status(500).json({ message: 'Export failed', error: error.message });
+    }
+};
+
+module.exports = { getCategories, runScraper, getScraperLogs, getDirectoryCategories, runDirectoryScraper, exportCSV };
+
