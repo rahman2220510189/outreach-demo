@@ -61,15 +61,19 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
     </html>
     `;
 
-  const params = {
-    Source: process.env.AWS_SES_FROM_EMAIL,
-    Destination: { ToAddresses: [toEmail] },
-    ReplyToAddresses: [process.env.REPLY_TO_EMAIL],
-    Message: {
-        Subject: { Data: subject, Charset: 'UTF-8' },
-        Body: { Html: { Data: htmlBody, Charset: 'UTF-8' } }
-    }
-};
+    const params = {
+        Source: process.env.AWS_SES_FROM_EMAIL,
+        Destination: { ToAddresses: [toEmail] },
+        Message: {
+            Subject: { Data: subject, Charset: 'UTF-8' },
+            Body: { Html: { Data: htmlBody, Charset: 'UTF-8' } }
+        },
+        // One-click unsubscribe header (RFC 8058) — email clients show unsubscribe button
+        Headers: [
+            { Name: 'List-Unsubscribe', Value: `<${unsubscribeUrl}>` },
+            { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' }
+        ]
+    };
 
     const command = new SendEmailCommand(params);
     return await sesClient.send(command);
