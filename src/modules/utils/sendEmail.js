@@ -18,7 +18,7 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
     });
 
     const sourceLabel = SOURCE_LABELS[source] || 'a public business directory';
-    const unsubscribeUrl = `${process.env.CLIENT_URL}/unsubscribe?email=${encodeURIComponent(toEmail)}`;
+    const unsubscribeUrl = `${process.env.BACKEND_URL}/api/contacts/unsubscribe?email=${encodeURIComponent(toEmail)}`;
 
     const htmlBody = `
     <html>
