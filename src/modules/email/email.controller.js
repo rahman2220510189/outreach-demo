@@ -72,7 +72,7 @@ const sendBulkEmail = async (req, res) => {
 
         // Get all pending contacts
         // const contacts = await contactsCollection.find({ status: 'pending' }).toArray();
-        const contacts = await contactsCollection.find({}).toArray();
+const contacts = await contactsCollection.find({ status: 'pending' }).toArray();
         if (contacts.length === 0) {
             return res.status(400).json({ message: 'No pending contacts found' });
         }
