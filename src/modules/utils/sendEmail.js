@@ -26,10 +26,10 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
             
             <p>Hi ${contactName || 'there'},</p>
 
-            <p style="font-size: 12px; color: #999; border-left: 3px solid #ddd; padding-left: 10px;">
-                We found your business contact details on ${sourceLabel}. 
-                We are reaching out because we believe our services may be relevant to your business.
-            </p>
+          <p style="font-size: 14px; color: #333; margin-bottom: 16px;">
+    We found your business contact details on ${sourceLabel}. 
+    We are reaching out because we believe our services may be relevant to your business.
+</p>
 
             ${body}
 
