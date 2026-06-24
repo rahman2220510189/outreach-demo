@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { sendSingleEmail, sendBulkEmail, getLogs } = require('./email.controller');
+const { sendSingleEmail, sendBulkEmail, sendCSVEmail, getLogs } = require('./email.controller');
 
 // Send single email
+router.post('/send-csv', sendCSVEmail);
+
 router.post('/send', sendSingleEmail);
 
 // Send bulk email
