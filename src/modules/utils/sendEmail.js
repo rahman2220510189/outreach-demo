@@ -18,6 +18,7 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
     });
 
     const sourceLabel = SOURCE_LABELS[source] || 'a public business directory';
+    const formattedBody = body.replace(/\n/g, '<br/>'); 
     const unsubscribeUrl = `${process.env.BACKEND_URL}/api/contacts/unsubscribe?email=${encodeURIComponent(toEmail)}`;
 
     const htmlBody = `
@@ -31,7 +32,7 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
     We are reaching out because we believe our services may be relevant to your business.
 </p>
 
-            ${body}
+            ${formattedBody}
 
             <br/>
             <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;"/>
@@ -68,11 +69,6 @@ const sendEmail = async ({ toEmail, subject, body, contactName, source }) => {
             Subject: { Data: subject, Charset: 'UTF-8' },
             Body: { Html: { Data: htmlBody, Charset: 'UTF-8' } }
         },
-        // One-click unsubscribe header (RFC 8058) — email clients show unsubscribe button
-        Headers: [
-            { Name: 'List-Unsubscribe', Value: `<${unsubscribeUrl}>` },
-            { Name: 'List-Unsubscribe-Post', Value: 'List-Unsubscribe=One-Click' }
-        ]
     };
 
     const command = new SendEmailCommand(params);
