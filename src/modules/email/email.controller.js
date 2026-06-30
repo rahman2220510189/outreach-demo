@@ -537,4 +537,29 @@ const sendCSVEmail = async (req, res) => {
     }
 };
 
-module.exports = { sendSingleEmail, sendBulkEmail, sendCSVEmail, getLogs };
+// Clear CSV sent history — either one specific email, or the entire history (for fresh re-testing)
+const clearCSVHistory = async (req, res) => {
+    try {
+        const db = getDB();
+        const { email, clearAll } = req.body;
+
+        if (clearAll) {
+            const result = await db.collection('csv_sent_history').deleteMany({});
+            return res.json({ message: `Cleared entire CSV history — ${result.deletedCount} record(s) removed. You can now resend to anyone.` });
+        }
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email is required, or set clearAll: true' });
+        }
+
+        const result = await db.collection('csv_sent_history').deleteMany({
+            email: email.trim().toLowerCase()
+        });
+
+        res.json({ message: `Removed ${result.deletedCount} record(s) from CSV history for ${email}` });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+};
+
+module.exports = { sendSingleEmail, sendBulkEmail, sendCSVEmail, getLogs, clearCSVHistory };
